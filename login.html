@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ProblemSolve AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-header p {
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #64748b;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider span {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            padding: 0 20px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .auth-links {
+            margin-top: 20px;
+        }
+
+        .auth-links a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #8b5cf6;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #6366f1;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-password a {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        /* Message styles - will be added by authUtils */
+        .auth-message {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+            
+            .back-link {
+                position: relative;
+                top: 0;
+                left: 0;
+                display: block;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Home</a>
+    
+    <div class="container">
+        <div class="login-card">
+            <div class="logo">ProblemSolve AI</div>
+            
+            <div class="login-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to access your AI-powered problem-solving dashboard</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@company.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#" onclick="resetPassword()">Forgot your password?</a>
+                </div>
+
+                <button type="submit" class="btn" id="loginBtn">Sign In</button>
+            </form>
+
+            <div class="divider">
+                <span>Don't have an account?</span>
+            </div>
+
+            <div class="auth-links">
+                <a href="signup.html">Create your free account →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is already authenticated on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await window.supabaseAuth.redirectIfAuthenticated();
+        });
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // Basic validation
+            if (!email || !password) {
+                window.authUtils.showMessage('Please enter both email and password', 'error');
+                return;
+            }
+            
+            // Show loading state
+            window.authUtils.setButtonLoading('loginBtn', true, 'Sign In');
+            
+            try {
+                const { data, error } = await window.supabaseAuth.signIn(email, password);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (data.user) {
+                    window.authUtils.showMessage('Welcome back! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard after short delay
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please confirm your email address first. Check your inbox for the confirmation link.';
+                } else if (error.message.includes('Too many requests')) {
+                    errorMessage = 'Too many login attempts. Please wait a moment and try again.';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                window.authUtils.showMessage(errorMessage, 'error');
+            } finally {
+                window.authUtils.setButtonLoading('loginBtn', false, 'Sign In');
+            }
+        });
+
+        // Handle password reset
+        async function resetPassword() {
+            const email = document.getElementById('email').value.trim();
+            
+            if (!email) {
+                window.authUtils.showMessage('Please enter your email address first', 'error');
+                document.getElementById('email').focus();
+                return;
+            }
+            
+            try {
+                const { error } = await window.supabaseAuth._supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password.html`
+                });
+                
+                if (error) throw error;
+                
+                window.authUtils.showMessage('Password reset link sent! Check your email.', 'success');
+                
+            } catch (error) {
+                window.authUtils.showMessage('Error sending reset email. Please try again.', 'error');
+            }
+        }
+
+        // Auto-focus email field
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>
