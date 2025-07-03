@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Started - ProblemSolve AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <style>
         * {
             margin: 0;
@@ -590,7 +592,7 @@
                         <input type="password" id="password" class="form-input" placeholder="Create a secure password" required>
                     </div>
 
-                    <button type="submit" class="btn">Continue to Plan Selection →</button>
+                    <button type="submit" class="btn" id="account-submit-btn">Continue to Plan Selection →</button>
                 </form>
             </div>
 
@@ -959,24 +961,80 @@
         }
 
         // Form submissions
-        document.getElementById('accountForm').addEventListener('submit', function(e) {
+        document.getElementById('accountForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Collect form data
-            formData.firstName = document.getElementById('firstName').value;
-            formData.lastName = document.getElementById('lastName').value;
-            formData.email = document.getElementById('email').value;
-            formData.company = document.getElementById('company').value;
-            formData.teamSize = document.getElementById('teamSize').value;
-            formData.role = document.getElementById('role').value;
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                company: document.getElementById('company').value,
+                teamSize: document.getElementById('teamSize').value,
+                role: document.getElementById('role').value,
+                password: document.getElementById('password').value
+            };
             
             // Basic validation
-            if (!formData.firstName || !formData.lastName || !formData.email || !formData.company) {
-                alert('Please fill in all required fields');
+            if (!formData.firstName || !formData.lastName || !formData.email || !formData.company || !formData.password) {
+                window.authUtils.showMessage('Please fill in all required fields', 'error');
                 return;
             }
             
-            goToStep(2);
+            if (formData.password.length < 6) {
+                window.authUtils.showMessage('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // Show loading state
+            window.authUtils.setButtonLoading('account-submit-btn', true, 'Continue to Plan Selection →');
+            
+            try {
+                // Sign up with Supabase
+                const { data, error } = await window.supabaseAuth.signUp(
+                    formData.email, 
+                    formData.password, 
+                    formData
+                );
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (data.user && !data.session) {
+                    // Email confirmation required
+                    window.authUtils.showMessage('Please check your email to confirm your account, then return to continue.', 'success');
+                    
+                    // Store form data for after email confirmation
+                    sessionStorage.setItem('signupData', JSON.stringify(formData));
+                    
+                    // Still proceed to plan selection for demo purposes
+                    setTimeout(() => {
+                        goToStep(2);
+                    }, 2000);
+                } else if (data.user && data.session) {
+                    // User is signed in immediately
+                    window.authUtils.showMessage('Account created successfully!', 'success');
+                    goToStep(2);
+                }
+                
+            } catch (error) {
+                let errorMessage = 'An error occurred. Please try again.';
+                
+                if (error.message.includes('already registered')) {
+                    errorMessage = 'This email is already registered. Try logging in instead.';
+                } else if (error.message.includes('weak password')) {
+                    errorMessage = 'Password is too weak. Please use a stronger password.';
+                } else if (error.message.includes('email')) {
+                    errorMessage = 'Please enter a valid email address.';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                window.authUtils.showMessage(errorMessage, 'error');
+            } finally {
+                window.authUtils.setButtonLoading('account-submit-btn', false, 'Continue to Plan Selection →');
+            }
         });
 
         document.getElementById('planForm').addEventListener('submit', function(e) {
@@ -1026,7 +1084,18 @@
             button.disabled = true;
             
             // In a real application, this would integrate with Stripe, PayPal, etc.
-            setTimeout(() => {
+            // For now, we'll mark the user as having completed signup
+            setTimeout(async () => {
+                // Update user metadata to include selected plan
+                const planData = {
+                    plan: selectedPlan,
+                    subscriptionDate: new Date().toISOString(),
+                    planDetails: planDetails[selectedPlan]
+                };
+                
+                // Store plan selection
+                localStorage.setItem('userPlan', JSON.stringify(planData));
+                
                 showSuccess();
             }, 2000);
         }
@@ -1063,8 +1132,26 @@
             this.value = this.value.replace(/\D/g, '').substring(0, 4);
         });
 
-        // Initialize
-        updateOrderSummary();
+        // Initialize - check if user is already authenticated
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is already signed in
+            const isAuthenticated = await window.supabaseAuth.isAuthenticated();
+            if (isAuthenticated) {
+                // User is already signed in, redirect to dashboard
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            // Check if user just confirmed their email
+            const { data: { session } } = await window.supabaseAuth.getSession();
+            if (session) {
+                // User just confirmed email, show success and go to plan selection
+                window.authUtils.showMessage('Email confirmed! Please select your plan.', 'success');
+                goToStep(2);
+            }
+            
+            updateOrderSummary();
+        });
     </script>
 </body>
 </html>
