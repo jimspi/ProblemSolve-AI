@@ -1037,17 +1037,17 @@
         }
 
         function goToDashboard() {
-            // In a real application, this would redirect to the actual dashboard
-            alert('Redirecting to your dashboard...');
+            // Redirect to the actual dashboard
+            window.location.href = 'dashboard.html';
         }
 
         function startOnboarding() {
-            // In a real application, this would start an onboarding flow
-            alert('Starting the quick tour...');
+            // Redirect to dashboard with onboarding mode
+            window.location.href = 'dashboard.html?onboarding=true';
         }
 
         function goBack() {
-            window.history.back();
+            window.location.href = 'index.html';
         }
 
         // Input formatting
