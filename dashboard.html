@@ -719,52 +719,32 @@
                 <section id="dashboard-section">
                     <div class="dashboard-overview">
                         <div class="stat-card">
-                            <div class="stat-value">47</div>
+                            <div class="stat-value" id="problemsCount">0</div>
                             <div class="stat-label">Problems Solved</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">94%</div>
+                            <div class="stat-value" id="successRate">-</div>
                             <div class="stat-label">Success Rate</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">12.3</div>
+                            <div class="stat-value" id="avgTime">-</div>
                             <div class="stat-label">Avg. Days to Solution</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value">$2.4M</div>
+                            <div class="stat-value" id="valueGenerated">$0</div>
                             <div class="stat-label">Value Generated</div>
                         </div>
                     </div>
 
                     <div class="recent-problems">
                         <h2 class="section-title">Recent Problems</h2>
-                        <div class="problem-item">
-                            <div>
-                                <div class="problem-title">Customer Churn Rate Increasing</div>
-                                <div class="problem-date">Analyzed 2 days ago</div>
+                        <div id="problemsList">
+                            <div style="text-align: center; padding: 60px 20px; color: #cbd5e1;">
+                                <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;">🚀</div>
+                                <h3 style="font-size: 20px; margin-bottom: 10px; color: #ffffff;">Ready to solve your first problem?</h3>
+                                <p style="margin-bottom: 30px;">Use our AI-powered analysis to break down complex challenges and get actionable solutions.</p>
+                                <button class="btn" onclick="showSection('new-problem')">Analyze Your First Problem</button>
                             </div>
-                            <div class="problem-status status-progress">In Progress</div>
-                        </div>
-                        <div class="problem-item">
-                            <div>
-                                <div class="problem-title">Low Team Productivity</div>
-                                <div class="problem-date">Analyzed 5 days ago</div>
-                            </div>
-                            <div class="problem-status status-solved">Solved</div>
-                        </div>
-                        <div class="problem-item">
-                            <div>
-                                <div class="problem-title">Supply Chain Delays</div>
-                                <div class="problem-date">Analyzed 1 week ago</div>
-                            </div>
-                            <div class="problem-status status-solved">Solved</div>
-                        </div>
-                        <div class="problem-item">
-                            <div>
-                                <div class="problem-title">Marketing ROI Declining</div>
-                                <div class="problem-date">Analyzed 2 weeks ago</div>
-                            </div>
-                            <div class="problem-status status-pending">Pending Review</div>
                         </div>
                     </div>
                 </section>
@@ -1274,7 +1254,88 @@
             // Set up some sample pain points for demo
             painPoints = ['Declining customer satisfaction', 'Increased response times', 'Resource allocation issues'];
             updatePainPointTags();
+            
+            // Initialize empty dashboard for new users
+            initializeDashboard();
         });
+
+        function initializeDashboard() {
+            // Check if user has any solved problems
+            const solvedProblems = JSON.parse(localStorage.getItem('solvedProblems') || '[]');
+            
+            if (solvedProblems.length === 0) {
+                // New user - show empty state
+                updateDashboardStats(0, null, null, 0);
+            } else {
+                // Existing user - calculate and show real stats
+                updateDashboardStats(
+                    solvedProblems.length,
+                    calculateSuccessRate(solvedProblems),
+                    calculateAvgTime(solvedProblems),
+                    calculateValueGenerated(solvedProblems)
+                );
+                displayRecentProblems(solvedProblems);
+            }
+        }
+
+        function updateDashboardStats(problemsCount, successRate, avgTime, valueGenerated) {
+            document.getElementById('problemsCount').textContent = problemsCount;
+            document.getElementById('successRate').textContent = successRate ? successRate + '%' : '-';
+            document.getElementById('avgTime').textContent = avgTime ? avgTime : '-';
+            document.getElementById('valueGenerated').textContent = valueGenerated ? '
+    </script>
+</body>
+</html> + valueGenerated : '$0';
+        }
+
+        function calculateSuccessRate(problems) {
+            if (problems.length === 0) return null;
+            const solved = problems.filter(p => p.status === 'solved').length;
+            return Math.round((solved / problems.length) * 100);
+        }
+
+        function calculateAvgTime(problems) {
+            if (problems.length === 0) return null;
+            // Mock calculation - in real app would use actual dates
+            return (Math.random() * 20 + 5).toFixed(1);
+        }
+
+        function calculateValueGenerated(problems) {
+            if (problems.length === 0) return 0;
+            // Mock calculation - in real app would track actual value
+            return (problems.length * 50000).toLocaleString();
+        }
+
+        function displayRecentProblems(problems) {
+            const container = document.getElementById('problemsList');
+            if (problems.length === 0) return;
+
+            container.innerHTML = problems.slice(-4).reverse().map(problem => 
+                `<div class="problem-item">
+                    <div>
+                        <div class="problem-title">${problem.title}</div>
+                        <div class="problem-date">Analyzed ${problem.date}</div>
+                    </div>
+                    <div class="problem-status status-${problem.status}">${problem.status.charAt(0).toUpperCase() + problem.status.slice(1)}</div>
+                </div>`
+            ).join('');
+        }
+
+        function saveProblemToHistory(problemData) {
+            const solvedProblems = JSON.parse(localStorage.getItem('solvedProblems') || '[]');
+            const newProblem = {
+                title: problemData.title,
+                date: new Date().toLocaleDateString(),
+                status: 'solved',
+                ...problemData
+            };
+            
+            solvedProblems.push(newProblem);
+            localStorage.setItem('solvedProblems', JSON.stringify(solvedProblems));
+            
+            // Update dashboard
+            initializeDashboard();
+        }
     </script>
 </body>
 </html>
