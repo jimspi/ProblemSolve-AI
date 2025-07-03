@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProblemSolve AI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <style>
         * {
             margin: 0;
@@ -695,6 +697,7 @@
                         <div class="user-plan">Professional Plan</div>
                     </div>
                 </div>
+                <button onclick="handleLogout()" style="margin-top: 10px; padding: 8px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #cbd5e1; font-size: 12px; cursor: pointer; width: 100%;">Logout</button>
             </div>
         </aside>
 
@@ -1250,7 +1253,34 @@
         }
 
         // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Protect the page - redirect if not authenticated
+            const hasAccess = await window.supabaseAuth.protectPage();
+            
+            if (!hasAccess) {
+                return; // User will be redirected to login
+            }
+            
+            // Load user data
+            const { data: { user } } = await window.supabaseAuth.getUser();
+            if (user) {
+                // Update user profile in sidebar
+                const userAvatar = document.querySelector('.user-avatar');
+                const userName = document.querySelector('.user-name');
+                const userPlan = document.querySelector('.user-plan');
+                
+                if (userAvatar) {
+                    userAvatar.textContent = (user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase();
+                }
+                if (userName) {
+                    userName.textContent = user.user_metadata?.full_name || user.email;
+                }
+                if (userPlan) {
+                    const savedPlan = JSON.parse(localStorage.getItem('userPlan') || '{}');
+                    userPlan.textContent = savedPlan.planDetails?.name || 'Professional Plan';
+                }
+            }
+            
             // Set up some sample pain points for demo
             painPoints = ['Declining customer satisfaction', 'Increased response times', 'Resource allocation issues'];
             updatePainPointTags();
